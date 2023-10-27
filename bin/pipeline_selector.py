@@ -47,10 +47,18 @@ def select_pipeline(
         axis=1,
         inplace=True,
     )
+    # 筛选列
+    df = df[[
+        '数据来源', 'BO', 'PRJ', '项目名称','运营状态', '信心','产品事业部','KA客户','业务区域','业务线',
+        '国家','省份','城市','落地港口','产品线1','产品线2','日期','数量', '金额','record_year','record_month','record_week',
+    ]].copy()
+    
     # 筛选掉已取消的商机&月度记录
     df = df.loc[
         ((df['record_week']!=None) & (df['record_week']==df['record_week'])) & (df['运营状态']!='已取消'),
     ].copy()
+    
+    # 重设index
     df.reset_index(names=['ori_index'], inplace=True)
     df['id'] = "ppl_"+df.index.astype(str)
     return df
@@ -61,7 +69,7 @@ if __name__=='__main__':
     DATABASE_NAME_OP = 'operation'
     DATABASE_NAME_SP = 'ScenarioPlanning'
     DATABASE_IP = '192.168.118.100'
-    pswd = input("Password please.")
+    pswd = input("Password please: ")
     
     database_bo_connector = get_db_connect(
         database_ip=DATABASE_IP,

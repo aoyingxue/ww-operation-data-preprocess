@@ -52,6 +52,7 @@ def to_sql_with_pk(
         print("Export has finished successfully.")
         with db_engine.connect() as con:
             con.execute(text(f"ALTER TABLE `{db_table_name}` ADD PRIMARY KEY (`{pk_label}`);"))
+        print("Primary key set.")
     except:
         print("Something went wrong.")
         
