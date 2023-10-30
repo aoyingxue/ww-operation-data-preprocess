@@ -10,7 +10,12 @@ __github__ = "aoyingxue"
 __copyright__ = "Copyright 2023"
 
 ######################### Connection #########################
-def get_db_connect(database_username,database_password,database_ip,database_name):
+def get_db_connect(
+    database_username: str,
+    database_password: str,
+    database_ip: str,
+    database_name: str,
+)->str:
     '''
     Function:
         Get access to the database.
