@@ -61,6 +61,7 @@ def select_pipeline(
     # 重设index
     df.reset_index(names=['ori_index'], inplace=True)
     df['id'] = "ppl_"+df.index.astype(str)
+    df.set_index('id',inplace = True)
     return df
 
 if __name__=='__main__':

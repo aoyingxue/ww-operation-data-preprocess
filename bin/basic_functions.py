@@ -41,20 +41,26 @@ def to_sql_with_pk(
     '''
     try:
         if df.index.name != pk_label:
-            df.set_index(pk_label,inplace=True)
+            print(f"df index {df.index.name} is not the label you identified. ")
+            if pk_label in df.columns:
+                df.set_index(pk_label,inplace=True)
+            else:
+                raise Exception(f"{pk_label} is not one of df's columns.")
         df.to_sql(
             db_table_name,
             db_engine,
-            if_exists='replace',
-            index_label=pk_label,
-            dtype={pk_label: VARCHAR(df.index.get_level_values(pk_label).str.len().max())},
+            if_exists = 'replace',
+            index_label = pk_label,
+            dtype = {pk_label: VARCHAR(df.index.get_level_values(pk_label).astype('str').str.len().max())},
         )
         print("Export has finished successfully.")
         with db_engine.connect() as con:
             con.execute(text(f"ALTER TABLE `{db_table_name}` ADD PRIMARY KEY (`{pk_label}`);"))
         print("Primary key set.")
-    except:
-        print("Something went wrong.")
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
+    
         
 if __name__=='__main__':
     print(ifnull(np.nan, 0))
