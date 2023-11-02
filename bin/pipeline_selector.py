@@ -12,9 +12,10 @@ __author__ = "Yuki Ao"
 __github__ = "aoyingxue"
 __copyright__ = "Copyright 2023"
 
+
 def select_pipeline(
-    database_bo_connector:str,
-)-> pd.DataFrame | None:
+    database_bo_connector: str,
+) -> pd.DataFrame | None:
     '''
     Function:
         filter info needed and preprocess pipeline weekly snapshots for union.
@@ -24,24 +25,25 @@ def select_pipeline(
     Returns:
         a preprocessed dataframe.
     '''
-    df = pd.read_sql("pipeline_updating", database_bo_connector, index_col='id')
+    df = pd.read_sql("pipeline_updating",
+                     database_bo_connector, index_col='id')
     df['数据来源'] = '签约'
     df['运营状态'] = df['签约状态'].apply(
-        lambda x: 
-            '预测' if x=='On-going' 
-            else ('已确认' if x=='Sign' else '已取消')
+        lambda x:
+            '预测' if x == 'On-going'
+            else ('已确认' if x == 'Sign' else '已取消')
     )
     df['信心'] = df[['签约信心', '签约状态']].apply(
-        lambda x: 
-            'Closed' if x['签约状态']=='Sign' else x['签约信心'],
+        lambda x:
+            'Closed' if x['签约状态'] == 'Sign' else x['签约信心'],
         axis=1
     )
     df.rename(
         {
-            '预计/实际签约时间':'日期',
-            '总金额-元（含税）':'金额',
+            '预计/实际签约时间': '日期',
+            '总金额-元（含税）': '金额',
             'REGEXP_Year': 'record_year',
-            'REGEXP_Month':'record_month',
+            'REGEXP_Month': 'record_month',
             'REGEXP_Week': 'record_week',
         },
         axis=1,
@@ -49,29 +51,58 @@ def select_pipeline(
     )
     # 筛选列
     df = df[[
-        '数据来源', 'BO', 'PRJ', '项目名称','运营状态', '信心','产品事业部','KA客户','业务区域','业务线',
-        '国家','省份','城市','落地港口','产品线1','产品线2','日期','数量', '金额','record_year','record_month','record_week',
+        '数据来源', 'BO', 'PRJ', '项目名称', '运营状态', '信心', '产品事业部', 'KA客户', '业务区域', '业务线',
+        '国家', '省份', '城市', '落地港口', '产品线1', '产品线2', '日期', '数量', '金额', 
+        'record_year', 'record_month', 'record_week',
     ]].copy()
-    
+
     # 筛选掉已取消的商机&月度记录
     df = df.loc[
-        ((df['record_week']!=None) & (df['record_week']==df['record_week'])) & (df['运营状态']!='已取消'),
+        ((df['record_week'] != None) & (df['record_week']
+         == df['record_week'])) & (df['运营状态'] != '已取消'),
     ].copy()
-    
+
     # 重设index
     df.reset_index(names=['ori_index'], inplace=True)
     df['id'] = "ppl_"+df.index.astype(str)
-    df.set_index('id',inplace = True)
+    df.set_index('id', inplace=True)
     return df
 
-if __name__=='__main__':
+def select_latest_pipeline(
+    database_bo_connector=None,
+    database_bo_engine=None,
+)->pd.DataFrame | None:
+    if (database_bo_connector!=None) & (database_bo_connector==database_bo_connector):
+        conn = database_bo_connector
+    elif (database_bo_engine!=None) & (database_bo_engine==database_bo_engine):
+        conn = database_bo_engine
+    else:
+        raise Exception("You are not providing valid MySQL connector.")
+    df = pd.read_sql(
+        '''
+        SELECT a.* 
+        FROM 
+            pipeline_updating a
+        INNER JOIN 
+            (SELECT BO, MAX(updated_at) AS max_updated_at FROM pipeline_updating
+            GROUP BY BO) p
+        WHERE 
+            a.BO = p.BO AND a.updated_at = p.max_updated_at
+            AND a.BO NOT IN ("target","TBD")''', 
+        conn, 
+        index_col='id',
+    )
+    return df
+        
+
+if __name__ == '__main__':
     DATABASE_USERNAME = 'root'
     DATABASE_NAME_BO = 'database_bo'
     DATABASE_NAME_OP = 'operation'
     DATABASE_NAME_SP = 'ScenarioPlanning'
     DATABASE_IP = '192.168.118.100'
     pswd = input("Password please: ")
-    
+
     database_bo_connector = get_db_connect(
         database_ip=DATABASE_IP,
         database_name=DATABASE_NAME_BO,
@@ -87,11 +118,13 @@ if __name__=='__main__':
         database=DATABASE_NAME_SP,
     )
     scenario_planning_engine = create_engine(scenario_planning_url)
-    
+
     df = select_pipeline(database_bo_connector)
-    to_sql_with_pk(
-        df = df,
-        db_engine=scenario_planning_engine,
-        db_table_name='pipeline',
-        pk_label='id',
-    )
+    # to_sql_with_pk(
+    #     df=df,
+    #     db_engine=scenario_planning_engine,
+    #     db_table_name='pipeline',
+    #     pk_label='id',
+    # )
+    
+    select_latest_pipeline(database_bo_connector)
