@@ -11,9 +11,6 @@ __author__ = "Yuki Ao"
 __github__ = "aoyingxue"
 __copyright__ = "Copyright 2023"
 
-######################### Connection #########################
-
-
 def get_db_connect(
     database_username: str,
     database_password: str,
@@ -28,7 +25,6 @@ def get_db_connect(
     '''
     db_connect = f'mysql+mysqlconnector://{database_username}:{urlquote(database_password)}@{database_ip}:3306/{database_name}?charset=utf8'
     return db_connect
-
 
 def create_engine_ww(
     database_name: str,

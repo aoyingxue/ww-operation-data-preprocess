@@ -12,13 +12,11 @@ __author__ = "Yuki Ao"
 __github__ = "aoyingxue"
 __copyright__ = "Copyright 2023"
 
-
 def ifnull(var, val):
     if (var is None) | (var != var):
         return val
     else:
         return var
-
 
 def to_sql_with_pk(
     df: pd.DataFrame,
@@ -48,7 +46,8 @@ def to_sql_with_pk(
             if pk_label in df.columns:
                 df.set_index(pk_label, inplace=True)
             else:
-                raise Exception(f"{pk_label} is not one of df's columns.")
+                df.reset_index(drop=True, inplace=True)
+                df.index.name = pk_label
         df.to_sql(
             db_table_name,
             db_engine,

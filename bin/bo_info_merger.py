@@ -4,14 +4,14 @@
     用编号匹配BO信息
 '''
 import pandas as pd
-from db_connector import create_engine_ww, get_db_connect
+from db_connector import create_engine_ww
 from pipeline_selector import select_latest_pipeline
 
 __author__ = "Yuki Ao"
 __github__ = "aoyingxue"
 __copyright__ = "Copyright 2023"
 
-def merge_bo_info(
+def merge_bo_info_by_bo_num(
     left: pd.DataFrame,
     right: pd.DataFrame,
     extract_bo_cols=None,
@@ -61,7 +61,7 @@ def merge_bo_info(
         print(f"Unexpected {err=}, {type(err)=}")
         raise
 
-def find_prj_for_bo(
+def find_bo_num_by_prj(
     left: pd.DataFrame,
     right: pd.DataFrame,
     left_prj_col='PRJ',
@@ -104,6 +104,33 @@ def find_prj_for_bo(
         print(f"Unexpected {err=}, {type(err)=}")
         raise
 
+def merge_bo_info_by_prj_num(
+    df: pd.DataFrame,
+    df_project: pd.DataFrame,
+    df_pipeline: pd.DataFrame,
+)->pd.DataFrame | None:
+    '''
+    Function:
+        Merge BO info by project number.
+    Arguments:
+        df: the dataframe containing other functional data such as cash, direct procurement.
+        df_project: table 'project' in database 'operation'.
+        df_pipeline: latest pipeline records.
+    Returns:
+        A dataframe containing bo information found on project number.
+    '''
+    df_w_bo = find_bo_num_by_prj(
+        df,
+        df_project,
+        bo_col='bo',
+        right_prj_col='project_number',
+    )
+    print(df_w_bo.columns)
+    output = merge_bo_info_by_bo_num(
+        left=df_w_bo,
+        right=df_pipeline,
+    )
+    return output
 
 if __name__ == '__main__':
     DATABASE_NAME_BO = 'database_bo'
@@ -118,18 +145,6 @@ if __name__ == '__main__':
     cash_collection = pd.read_sql(
         'cash_collection', scenario_planning_engine, index_col='UID')
     project_business = pd.read_sql('project_business', operation_engine)
-    
     pipeline = select_latest_pipeline(database_bo_engine)
-
-    df_w_bo = find_prj_for_bo(
-        cash_collection,
-        project_business,
-        bo_col='bo',
-        right_prj_col='project_number',
-    )
-
-    output = merge_bo_info(
-        left=df_w_bo,
-        right=pipeline,
-    )
+    output = merge_bo_info_by_prj_num(cash_collection, project_business, pipeline)
     print(output)

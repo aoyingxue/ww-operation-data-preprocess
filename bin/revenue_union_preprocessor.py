@@ -5,7 +5,7 @@
 '''
 import pandas as pd
 from db_connector import get_db_connect
-from merge_revenue import merge_revenue
+from revenue_generator import generate_revenue
 from sqlalchemy import create_engine, URL
 
 __author__ = "Yuki Ao"
@@ -86,5 +86,5 @@ if __name__ == '__main__':
         database_username=DATABASE_USERNAME,
         database_password=pswd,
     )
-    revenue = merge_revenue(operation_connector, database_bo_connector)
+    revenue = generate_revenue(operation_connector, database_bo_connector)
     melt_revenue_for_union(revenue)

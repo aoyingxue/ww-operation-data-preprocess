@@ -4,9 +4,6 @@
     合并三个交付数据源，并导出数据至数据库。
 '''
 import pandas as pd
-from sqlalchemy.types import VARCHAR
-from sqlalchemy import text, Engine
-
 from non_qomolo_in_hand_selector import select_non_qomolo_in_hand
 from non_qomolo_b4_init_selector import select_non_qomolo_b4_init
 from qomolo_production_schedule_selector import select_qomolo_schedule
@@ -15,7 +12,7 @@ __author__ = "Yuki Ao"
 __github__ = "aoyingxue"
 __copyright__ = "Copyright 2023"
 
-def merge_revenue(
+def generate_revenue(
     operation_connector: str, 
     database_bo_connector:str, 
 ) -> pd.DataFrame | None:
@@ -38,5 +35,5 @@ def merge_revenue(
     )
     df_merge.reset_index(names=['ori_index'], inplace=True)
     df_merge['id'] = "mrf_"+df_merge.index.astype(str) # merged revenue forecast
-    df_merge = df_merge.set_index('id')
+    # df_merge = df_merge.set_index('id')
     return df_merge
