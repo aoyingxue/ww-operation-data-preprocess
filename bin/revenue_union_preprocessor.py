@@ -12,7 +12,6 @@ __author__ = "Yuki Ao"
 __github__ = "aoyingxue"
 __copyright__ = "Copyright 2023"
 
-
 def melt_revenue_for_union(
     df_revenue: pd.DataFrame,
 ) -> pd.DataFrame | None:
@@ -54,7 +53,6 @@ def melt_revenue_for_union(
     # reset the index after dropping off columns and rows
     df_melted.reset_index(drop=True, inplace=True)
     return df_melted
-
 
 if __name__ == '__main__':
     DATABASE_USERNAME = 'root'

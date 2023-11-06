@@ -13,15 +13,20 @@ from basic_functions import to_sql_with_pk
 from pipeline_selector import select_pipeline_updating, select_latest_pipeline
 from db_connector import create_engine_ww
 from cash_collection_selector import select_cash_collection
+from direct_purchase_selector import select_direct_purchase
 
 __author__ = "Yuki Ao"
 __github__ = "aoyingxue"
 __copyright__ = "Copyright 2023"
 
 def main():
+    ## 项目数据
+    project_business = pd.read_sql('project_business', operation_connector)
+    
     ## 签约数据
     pipeline_updating = select_pipeline_updating(database_bo_engine)
     pipeline = select_latest_pipeline(database_bo_engine)
+    print("pipeline has been extracted.")
     
     ## 交付数据
     revenue = generate_revenue(operation_connector, database_bo_connector)
@@ -33,16 +38,19 @@ def main():
     )
     # preprocess data sources
     revenue_for_union = melt_revenue_for_union(revenue)
+    print("revenue has been extracted.")
     
     ## 回款数据
-    cash_collection = pd.read_sql(
-        'cash_collection', scenario_planning_engine, index_col='UID')
-    project_business = pd.read_sql('project_business', operation_connector)
-    cash_for_union = select_cash_collection(cash_collection, project_business, pipeline)
+    cash_for_union = select_cash_collection(scenario_planning_engine, project_business, pipeline) # 回款
+    print("cash-in has been extracted.")
 
+    ## 付款数据
+    direct_purchase_for_union = select_direct_purchase(scenario_planning_engine, project_business, pipeline) # 直采
+    print("direct purchase has been extracted.")
+    
     # final data output
     df_scenarios = pd.concat(
-        objs=[pipeline_updating, revenue_for_union, cash_for_union],
+        objs=[pipeline_updating, revenue_for_union, cash_for_union, direct_purchase_for_union],
         axis=0,
         ignore_index=True,
     )
