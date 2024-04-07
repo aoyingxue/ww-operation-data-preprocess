@@ -40,6 +40,10 @@ def melt_revenue_for_union(
             '非Q-在手' if ((x['运营状态'] == '已确认') & (x['交付金额状态'] == '预计交付金额')) else x['运营状态']),
         axis=1,
     )
+    df_melted['信心'] = df_melted[['信心', '交付金额状态']].apply(
+        lambda x: 'Closed' if x['交付金额状态'] == '确认交付金额' else x['信心'],
+        axis=1,
+    )
     # drop unused columns
     df_melted.rename(
         {'预计/实际交付时间': '日期'},

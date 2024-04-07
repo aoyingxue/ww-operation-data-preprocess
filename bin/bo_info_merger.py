@@ -62,7 +62,7 @@ def merge_bo_info_by_bo_num(
         raise
 
 def find_bo_num_by_prj(
-    left: pd.DataFrame,
+    left: pd.DataFrame | pd.Series,
     right: pd.DataFrame,
     left_prj_col='PRJ',
     right_prj_col='PRJ',
@@ -105,7 +105,7 @@ def find_bo_num_by_prj(
         raise
 
 def merge_bo_info_by_prj_num(
-    df: pd.DataFrame,
+    df: pd.DataFrame | pd.Series,
     df_project: pd.DataFrame,
     df_pipeline: pd.DataFrame,
 )->pd.DataFrame | None:
@@ -130,6 +130,7 @@ def merge_bo_info_by_prj_num(
         left=df_w_bo,
         right=df_pipeline,
     )
+    
     return output
 
 if __name__ == '__main__':
@@ -142,9 +143,9 @@ if __name__ == '__main__':
     operation_engine = create_engine_ww(DATABASE_NAME_OP, pswd)
     database_bo_engine = create_engine_ww(DATABASE_NAME_BO, pswd)
 
-    cash_collection = pd.read_sql(
-        'cash_collection', scenario_planning_engine, index_col='UID')
+    direct_purchase = pd.read_sql(
+        'direct_purchase', scenario_planning_engine)
     project_business = pd.read_sql('project_business', operation_engine)
     pipeline = select_latest_pipeline(database_bo_engine)
-    output = merge_bo_info_by_prj_num(cash_collection, project_business, pipeline)
+    output = direct_purchase.apply(lambda x: merge_bo_info_by_prj_num(x, project_business, pipeline) if x['PRJ']!=x['PRJ'] else x, axis=1)
     print(output)

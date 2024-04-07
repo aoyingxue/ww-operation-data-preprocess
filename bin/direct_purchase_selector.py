@@ -5,7 +5,7 @@
 '''
 import pandas as pd
 from sqlalchemy import Engine
-from bo_info_merger import merge_bo_info_by_prj_num
+from bo_info_merger import merge_bo_info_by_prj_num, merge_bo_info_by_bo_num
 from db_connector import create_engine_ww
 from pipeline_selector import select_latest_pipeline
 
@@ -38,7 +38,14 @@ def select_direct_purchase(
             },
             inplace=True,
         )
-        df_merged = merge_bo_info_by_prj_num(df, df_project, df_pipeline)
+        if 'BO' in df.columns:
+            df_merged = df.apply(
+                lambda x: 
+                    merge_bo_info_by_prj_num(x, df_project, df_pipeline) if ((x['BO']!=x['BO']) | (x['BO']==None)) else merge_bo_info_by_bo_num(x, df_pipeline), 
+                axis=1,
+            ) # BO备货的情况，则不用匹配BO
+        else:
+            df_merged = merge_bo_info_by_prj_num(df, df_project, df_pipeline)
         df_merged['id'] = "dp_"+df_merged.index.astype(str)
         df_extracted = df_merged[extract_cols].copy()
         df_extracted.index.name = 'id'

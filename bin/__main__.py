@@ -26,6 +26,12 @@ def main():
     ## 签约数据
     pipeline_updating = select_pipeline_updating(database_bo_engine)
     pipeline = select_latest_pipeline(database_bo_engine)
+    to_sql_with_pk(
+        df=pipeline_updating,
+        db_engine=scenario_planning_engine,
+        db_table_name='pipeline',
+        pk_label='id',
+    )
     print("pipeline has been extracted.")
     
     ## 交付数据
